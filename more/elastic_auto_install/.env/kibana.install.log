@@ -1,0 +1,9 @@
+[2024-10-23T01:24:52.642+08:00][INFO ][http.server.Preboot] http server running at http://localhost:5601
+[2024-10-23T01:24:52.732+08:00][INFO ][plugins-system.preboot] Setting up [1] plugins: [interactiveSetup]
+[2024-10-23T01:24:52.842+08:00][INFO ][preboot] "interactiveSetup" plugin is holding setup: Validating Elasticsearch connection configuration…
+[2024-10-23T01:24:52.856+08:00][INFO ][root] Holding setup until preboot stage is completed.
+
+
+i Kibana has not been configured.
+
+Go to http://localhost:5601/?code=115799 to get started.

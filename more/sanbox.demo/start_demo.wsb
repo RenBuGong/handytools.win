@@ -1,0 +1,16 @@
+<Configuration>
+    <!-- 映射宿主机的 __SCRIPTDIR__ -> 沙箱内的 C:\demo -->
+    <!-- wsb 不支持相对路径,上面使用__SCRIPTDIR__做占位符，用于外部脚本动态替换 -->
+    <MappedFolders>
+        <MappedFolder>
+            <HostFolder>__SCRIPTDIR__</HostFolder>
+            <SandboxFolder>c:\demo</SandboxFolder>
+            <ReadOnly>false</ReadOnly>
+        </MappedFolder>
+    </MappedFolders>
+
+    <!-- 启动沙箱后，自动执行 explorer.exe c:\demo -->
+    <LogonCommand>
+        <Command>explorer.exe c:\demo</Command>
+    </LogonCommand>
+</Configuration>

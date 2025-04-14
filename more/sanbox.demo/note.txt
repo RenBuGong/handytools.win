@@ -1,0 +1,2 @@
+双击start_demo.cmd ，即可，
+系统会弹出windows 沙箱，并在沙箱中打开当前目录

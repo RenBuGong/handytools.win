@@ -1,0 +1,140 @@
+# 测试方法,cd 到logstash 安装目录/bin 目录下,执行命令：
+# logstash -f D:\srv\logstash\conf.d\xea_zgame_logagent_res.test10000.json --path.data D:\srv\logstash\data\test_instance
+
+
+input {
+  generator {
+    lines => [
+      '[2024-02-18 08:41:47.338353] [pvp_logic.cpp:5961:write_cc_pkg_info()] RunLog: player[(deskid(1), uid(123456), rolename() matchroomid[1157862028053846876])] input_total_num[48] cc_num[47] cc_dulp_num[1] cc_diso_num[0] cc_unor_num[0]'
+    ]
+    count => 1
+  }
+}
+
+
+
+
+filter {
+  grok {
+    match => { "message" => "\[%{TIMESTAMP_ISO8601:timestamp}\]%{DATA}deskid\(%{INT:zgame_deskid}\), uid\(%{INT:zgame_uid}\), rolename\(%{DATA:zgame_rolename}\) matchroomid\[%{INT:zgame_matchroomid}\]" }
+    tag_on_failure => ["failure_grok_timestamp"]
+  }
+
+  ruby {
+    code => "
+      require 'time'
+
+      begin
+        timestamp_str = event.get('timestamp')
+        if timestamp_str.is_a?(String)
+          time = Time.parse(timestamp_str)
+          event.set('zgame_timestamp_ms', (time.to_f * 1000).to_i)
+          event.set('@timestamp', LogStash::Timestamp.new(time))
+        else
+          event.tag('timestamp_type_error')
+          event.set('ruby_parse_error', 'Timestamp is not a string')
+        end
+      rescue => e
+        event.tag('ruby_parse_failure')
+        event.set('ruby_parse_error', e.message)
+      end
+    "
+  }
+
+  # 处理 write_pvp_info 信息
+  if "write_pvp_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} mobile\[%{DATA:zgame_mobile}\] network\[%{DATA:zgame_network}\] fight_min\[%{NUMBER:zgame_fight_min:float}\] cache_len\[%{INT:zgame_cache_len:long}\] block_num\[%{INT:zgame_block_num:long}\] avg_inter\[%{NUMBER:zgame_avg_inter:float}\] max_inter\[%{INT:zgame_max_inter:long}\] min_inter\[%{INT:zgame_min_inter:long}\] cfps_avg\[%{NUMBER:zgame_cfps_avg:float}\] cfps_max\[%{INT:zgame_cfps_max:long}\] cfps_min\[%{INT:zgame_cfps_min:long}\]" }
+      tag_on_failure => ["failure_pvp_info"]
+    }
+  }
+
+  # 处理 write_cc_pkg_info 信息
+  if "write_cc_pkg_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} input_total_num\[%{INT:zgame_input_total_num:long}\] cc_num\[%{INT:zgame_cc_num:long}\] cc_dulp_num\[%{INT:zgame_cc_dulp_num:long}\] cc_diso_num\[%{INT:zgame_cc_diso_num:long}\] cc_unor_num\[%{INT:zgame_cc_unor_num:long}\]" }
+      tag_on_failure => ["failure_cc_pkg_info"]
+    }
+  }
+
+  # 处理 write_cs_pkg_info 信息
+  if "write_cs_pkg_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} cs_num\[%{INT:zgame_cs_num:long}\] cs_dulp_num\[%{INT:zgame_cs_dulp_num:long}\] cs_diso_num\[%{INT:zgame_cs_diso_num:long}\] cs_unor_num\[%{INT:zgame_cs_unor_num:long}\]" }
+      tag_on_failure => ["failure_cs_pkg_info"]
+    }
+  }
+
+  # 处理 write_req_frame_info 信息
+  if "write_req_frame_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} lose_frap_times\[%{INT:zgame_lose_frap_times:long}\] lose_frap_num\[%{INT:zgame_lose_frap_num:long}\] timeout_frap_times\[%{INT:zgame_timeout_frap_times:long}\] timeout_frap_num\[%{INT:zgame_timeout_frap_num:long}\]" }
+      tag_on_failure => ["failure_req_frame_info"]
+    }
+  }
+
+  # 处理 write_up_lose_info 信息
+  if "write_up_lose_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} lose_up_times\[%{INT:zgame_lose_up_times:long}\] lose_up_num\[%{INT:zgame_lose_up_num:long}\] drop_move_num\[%{INT:zgame_drop_move_num:long}\] drop_stop_num\[%{INT:zgame_drop_stop_num:long}\] drop_exced_num\[%{INT:zgame_drop_exced_num:long}\]" }
+      tag_on_failure => ["failure_up_lose_info"]
+    }
+  }
+
+  # 处理 write_delay_or_full_lose_info 信息
+  if "write_delay_or_full_lose_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} cc_full_num\[%{INT:zgame_cc_full_num:long}\] delay_times\[%{INT:zgame_delay_times:long}\] delay_pkg_num\[%{INT:zgame_delay_pkg_num:long}\] excced_times\[%{INT:zgame_excced_times:long}\] excced_pkg_num\[%{INT:zgame_excced_pkg_num:long}\]" }
+      tag_on_failure => ["failure_delay_full_lose_info"]
+    }
+  }
+
+  # 处理 write_down_lose_distri_info 信息
+  if "write_down_lose_distri_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} down_lose_distribute 0~5\[%{INT:zgame_down_lose_0_5:long}\] 6~10\[%{INT:zgame_down_lose_6_10:long}\] 11~15\[%{INT:zgame_down_lose_11_15:long}\] 16~20\[%{INT:zgame_down_lose_16_20:long}\] 21~25\[%{INT:zgame_down_lose_21_25:long}\] 26~30\[%{INT:zgame_down_lose_26_30:long}\] 31~40\[%{INT:zgame_down_lose_31_40:long}\] 41~50\[%{INT:zgame_down_lose_41_50:long}\] 51~100\[%{INT:zgame_down_lose_51_100:long}\]" }
+      tag_on_failure => ["failure_down_lose_distri_info"]
+    }
+  }
+
+  # 处理 write_ack_and_fast_info 信息
+  if "write_ack_and_fast_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} ack_num\[%{INT:zgame_ack_num:long}\] fast_times\[%{INT:zgame_fast_times:long}\] fast_frap_num\[%{INT:zgame_fast_frap_num:long}\] fast_chg_win_num\[%{INT:zgame_fast_chg_win_num:long}\] double_send_num\[%{INT:zgame_double_send_num:long}\]" }
+      tag_on_failure => ["failure_ack_fast_info"]
+    }
+  }
+
+  # 处理 write_up_spare_frap_info 信息
+  if "write_up_spare_frap_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} up_spare_num\[%{INT:zgame_up_spare_num:long}\] up_spare_eff_num\[%{INT:zgame_up_spare_eff_num:long}\] succ_spare_cs_num\[%{INT:zgame_succ_spare_cs_num:long}\] succ_first_cs_num\[%{INT:zgame_succ_first_cs_num:long}\] succ_ack_cs_num\[%{INT:zgame_succ_ack_cs_num:long}\]" }
+      tag_on_failure => ["failure_up_spare_frap_info"]
+    }
+  }
+
+  # 处理 write_input_num_distribute_info 信息
+  if "write_input_num_distribute_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} input_num 1~5\[%{INT:zgame_input_num1_5:long}\] 6~10\[%{INT:zgame_input_num6_10:long}\] 11~15\[%{INT:zgame_input_num11_15:long}\] 16~20\[%{INT:zgame_input_num16_20:long}\] 21~25\[%{INT:zgame_input_num21_25:long}\] 26~30\[%{INT:zgame_input_num26_30:long}\] 31~35\[%{INT:zgame_input_num31_35:long}\] 36~40\[%{INT:zgame_input_num36_40:long}\]" }
+      tag_on_failure => ["failure_input_num_distribute_info"]
+    }
+  }
+
+  # 处理 write_ping_delay_distribute_info 信息
+  if "write_ping_delay_distribute_info" in [message] {
+    grok {
+      match => { "message" => "%{DATA} ping delay 0~50\[%{INT:zgame_ping_delay0_50:long}\] 50~100\[%{INT:zgame_ping_delay50_100:long}\] 100~150\[%{INT:zgame_ping_delay100_150:long}\] 150~200\[%{INT:zgame_ping_delay150_200:long}\] 200~300      \[%{INT:zgame_ping_delay200_300:long}\] 300~400\[%{INT:zgame_ping_delay300_400:long}\] 400~500\[%{INT:zgame_ping_delay400_500:long}\] 500~600\[%{INT:zgame_ping_delay500_600:long}\] 600~700\[%{INT:zgame_ping_delay600_700:long}\] 700~800\[%{INT:zgame_ping_delay700_800:long}\] 800~1500\[%{INT:zgame_ping_delay800_1500:long}\] 1500~oo\[%{INT:zgame_ping_delay1500_oo:long}\]" }
+      tag_on_failure => ["failure_ping_delay_distribute_info"]
+    }
+  }
+}
+
+
+
+
+output {
+  stdout {
+    codec => rubydebug
+  }
+}

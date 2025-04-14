@@ -1,0 +1,75 @@
+input {
+  elastic_agent {
+    port => 5044
+    ssl_enabled => true
+    ssl_certificate_authorities => ["D:\srv\logstash\config\certs\logstash.crt"]
+    ssl_certificate => "D:\srv\logstash\config\certs\logstash.crt"
+    ssl_key => "D:\srv\logstash\config\certs\logstash.key"
+    # ssl_verify_mode => "force_peer"
+  }
+}
+
+filter {
+    dissect {
+        mapping => {
+            "message" => "%{zgame_bizlog_sn} %{[message]}"
+        }
+    }
+
+    grok {
+        match => { "message" => "^%{INT:zgame_bizlog_sn}(?<message>{.*})$" }
+    }
+
+    # 如果条件不满足则丢弃事件
+    if ![zgame_bizlog_sn] or ![message] {
+        drop { }
+    }
+
+    # 解析 JSON 字段并提升至根级别
+    json {
+        source => "message"
+    }
+    
+    # # 删除原始 message 字段，模拟 add_to_root 功能
+    # mutate {
+    #     remove_field => ["message"]
+    # }
+
+    # 日期处理
+    if [Head] and [Head][LogTimeStr] {
+        date {
+            match => ["[Head][LogTimeStr]", "yyyy-MM-dd HH:mm:ss.SSSSSS"]
+            timezone => "UTC"
+            target => "@timestamp"
+        }
+    }
+}
+
+# 基于索引的output 配置
+# output {
+#   elasticsearch {
+#     hosts => ["https://localhost:9200"] # 使用HTTPS协议
+#     index => "beat_5044_logagent-%{+YYYY.MM.dd}"
+#     user => "elastic" # Elasticsearch用户名，根据实际情况填写
+#     password => "d5vvv=HNmsAICF0RhqAE" # Elasticsearch密码，根据实际情况填写
+#     ssl_enabled => true
+#     ssl_certificate_authorities => "D:\srv\elasticsearch\config\certs\http_ca.crt" # 指向CA证书的路径，根据实际情况填写
+#   }
+#   stdout { codec => rubydebug }
+# }
+
+# 数据流output 配置
+output {
+  elasticsearch {
+    hosts => ["https://localhost:9200"] # 使用HTTPS协议
+    user => "elastic" # Elasticsearch用户名，根据实际情况填写
+    password => "d5vvv=HNmsAICF0RhqAE" # Elasticsearch密码，根据实际情况填写
+    ssl_enabled => true
+    ssl_certificate_authorities => "D:\srv\elasticsearch\config\certs\http_ca.crt" # 指向CA证书的路径，根据实际情况填写
+    data_stream => true  # 启用数据流支持
+    data_stream_type => "logs"  # 数据流类型: logs 或 metrics
+    data_stream_dataset => "logstash"  # 数据流数据集
+    data_stream_namespace => "beat_5044"  # 数据流命名空间
+  }
+  stdout { codec => rubydebug }
+}

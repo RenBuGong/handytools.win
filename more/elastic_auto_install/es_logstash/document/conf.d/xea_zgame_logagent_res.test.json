@@ -1,0 +1,117 @@
+# 测试方法,cd 到logstash 安装目录/bin 目录下,执行命令：
+# logstash -f D:\srv\logstash\conf.d\xea_zgame_logagent_res.test.json --path.data D:\srv\logstash\data\test_instance
+
+input {
+  generator {
+    lines => [
+      '[2024-09-20 16:52:58.449212] [logagent_logic.cpp:34:handle_busilog_pkg()] 300 {"EventID":10000,"MatchRoomID":"1157866790967473591","RUid":"7242815576006295616","CommData":{"Uid":"7242815576006295616"},"BattleReport":{"TotalTick":"362934","MapCfgId":30004,"LocalTStamp":1726822007,"heroCfgID":1112,"LocalObjId":111,"bringEqInfos":[],"getItemInfos":[],"loseItemInfos":[]}}'
+    ]
+    count => 1
+  }
+}
+
+
+
+
+
+filter {
+    dissect {
+        mapping => {
+          "message" => "[%{zgame_logging}] [%{module_info}] %{zgame_bizlog_sn} %{message_json}"
+        }
+      }
+    
+      if ![zgame_bizlog_sn] or ![message_json] {
+        drop { }
+      }
+    
+      json {
+        source => "message_json"
+        target => "zgame"
+      }
+    
+      mutate {
+        remove_field => ["message", "module_info"]
+      }
+    
+    
+        date {
+          match => ["[zgame][Head][LogTimeStr]", "yyyy-MM-dd HH:mm:ss.SSSSSS"]
+          timezone => "Asia/Shanghai"
+          target => "event_timestamp"
+        }
+    
+        date {
+          match => ["zgame_logging", "yyyy-MM-dd HH:mm:ss.SSSSSS"]
+          timezone => "Asia/Shanghai"
+          target => "zgame_logging"
+        }
+
+
+
+        # 检查 bringEqInfos 数组是否存在且未被任何克隆操作处理
+        if [zgame][BattleReport][bringEqInfos][0] and "clone_getItemInfos" not in [tags] and "clone_loseItemInfos" not in [tags] {
+            clone {
+                clones => ["clone_bringEqInfos"]
+            }
+        }
+    
+        # 检查 getItemInfos 数组是否存在且未被任何克隆操作处理
+        if [zgame][BattleReport][getItemInfos][0] and "clone_bringEqInfos" not in [tags] and "clone_loseItemInfos" not in [tags] {
+            clone {
+                clones => ["clone_getItemInfos"]
+            }
+        }
+    
+        # 检查 loseItemInfos 数组是否存在且未被任何克隆操作处理
+        if [zgame][BattleReport][loseItemInfos][0] and "clone_bringEqInfos" not in [tags] and "clone_getItemInfos" not in [tags] {
+            clone {
+                clones => ["clone_loseItemInfos"]
+            }
+        }
+    
+    
+        # 处理克隆后的事件，分别拆分并移除其他数组字段
+        if "clone_bringEqInfos" in [tags] {
+            split {
+                field => "[zgame][BattleReport][bringEqInfos]"
+            }
+            mutate {
+                remove_field => ["[zgame][BattleReport][getItemInfos]", "[zgame][BattleReport][loseItemInfos]"]
+            }
+        }
+    
+        if "clone_getItemInfos" in [tags] {
+            split {
+                field => "[zgame][BattleReport][getItemInfos]"
+            }
+            mutate {
+                remove_field => ["[zgame][BattleReport][bringEqInfos]", "[zgame][BattleReport][loseItemInfos]"]
+            }
+        }
+    
+        if "clone_loseItemInfos" in [tags] {
+            split {
+                field => "[zgame][BattleReport][loseItemInfos]"
+            }
+            mutate {
+                remove_field => ["[zgame][BattleReport][bringEqInfos]", "[zgame][BattleReport][getItemInfos]"]
+            }
+        }
+    
+        if "clone_bringEqInfos" not in [tags] and "clone_getItemInfos" not in [tags] and "clone_loseItemInfos" not in [tags] {
+            if [zgame][BattleReport][bringEqInfos][0] or [zgame][BattleReport][getItemInfos][0] or [zgame][BattleReport][loseItemInfos][0] {
+                drop { }
+            }
+        }
+  }
+
+
+
+
+
+output {
+  stdout {
+    codec => rubydebug
+  }
+}

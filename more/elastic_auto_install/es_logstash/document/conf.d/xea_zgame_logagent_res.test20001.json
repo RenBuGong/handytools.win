@@ -1,0 +1,149 @@
+# 测试方法,cd 到logstash 安装目录/bin 目录下,执行命令：
+# logstash -f D:\srv\logstash\conf.d\xea_zgame_logagent_res.test10000.json --path.data D:\srv\logstash\data\test_instance
+
+input {
+  generator {
+    lines => [
+        '3{"Head":{"EventID":20001,"LogFunc":"busilog_write_player_logout","LogTime":"1726807044271","LogTimeStr":"2024-09-20 12:37:24.272226"},"CommData":{"GameSvrID":"1.0.22.1","GameAppID":"","PlatID":0,"ZoneAreaID":0,"OpenID":"10101010","Uid":"7242741427258884160","CmdID":"","Date":"2024-09-20 12:37:24"},"ClientDetail":{"ClientAppVer":10000,"ClientResVer":100000000,"ClientSvnVer":-1,"ClientUniqVer":"42881053483264","IMEI":"00-5C-40-92-1B-0D-2D-56-69-0A-02-9F-6C-E1-4A-4B","ClientIP":"0.0.0.0","ClientInfo":{"SystemSoftware":"Mac OS X 14.6.1","SystemHardware":"Macmini9,1","TelecomOper":"","Network":"Wi-Fi/LAN","LoginChannel":0,"ClientVersion":"1.0.0","MemorySize":16384,"CltBuildNumber":"0","CltSvnVersion":"1.0.0","GpsLongitude":-1,"Gpslatitude":-1,"SimInfo":"","CltDeviceinfo":"田浩的Mac mini","CltSysLanguage":"ChineseSimplified","CltGmsInfo":"","CltIp":"10.37.129.2","ScreenWidth":1334,"ScreenHight":750,"CpuHardware":"Apple M1,8","PerfType":1}},"PlayerBaseInfo":{"Uid":"7242741427258884160","OpenID":"10101010","RoleName":"10101010","Level":2,"HeadID":2,"VipLevel":0,"BattleCount":1},"HeroInfo":{"HeroInfoList":[{"CommonInfo":{"HeroID":1105,"Level":1,"Exp":0,"SkinID":0,"EquipID":0}},{"CommonInfo":{"HeroID":1106,"Level":1,"Exp":0,"SkinID":0,"EquipID":0}},{"CommonInfo":{"HeroID":1112,"Level":1,"Exp":0,"SkinID":0,"EquipID":0}},{"CommonInfo":{"HeroID":1108,"Level":1,"Exp":0,"SkinID":0,"EquipID":0}}]},"ItemInfo":{"ItemList":[{"UniqueID":"7416579728942825473","ItemID":3042090,"AddUpdTime":1726807032,"OverCnt":"1","ItemInfo":{"EquipItemDetail":{"Attr":[{"AttrType":14,"AttrValue":990,"AddType":0},{"AttrType":15,"AttrValue":225,"AddType":0},{"AttrType":15,"AttrValue":117,"AddType":0}],"AppendixID":[]}}},{"UniqueID":"7416579728942825474","ItemID":3113090,"AddUpdTime":1726807032,"OverCnt":"1","ItemInfo":{"EquipItemDetail":{"Attr":[{"AttrType":2,"AttrValue":558,"AddType":0},{"AttrType":1,"AttrValue":198,"AddType":0},{"AttrType":5,"AttrValue":810,"AddType":0},{"AttrType":6,"AttrValue":270,"AddType":0},{"AttrType":4,"AttrValue":54,"AddType":0}],"AppendixID":[]}}},{"UniqueID":"7416579728942825475","ItemID":3112070,"AddUpdTime":1726807032,"OverCnt":"1","ItemInfo":{"EquipItemDetail":{"Attr":[{"AttrType":2,"AttrValue":434,"AddType":0},{"AttrType":1,"AttrValue":154,"AddType":0},{"AttrType":5,"AttrValue":630,"AddType":0},{"AttrType":6,"AttrValue":210,"AddType":0}],"AppendixID":[]}}},{"UniqueID":"7416579728942825476","ItemID":3112080,"AddUpdTime":1726807032,"OverCnt":"1","ItemInfo":{"EquipItemDetail":{"Attr":[{"AttrType":2,"AttrValue":496,"AddType":0},{"AttrType":1,"AttrValue":176,"AddType":0},{"AttrType":5,"AttrValue":720,"AddType":0},{"AttrType":6,"AttrValue":240,"AddType":0}],"AppendixID":[]}}},{"UniqueID":"7416579728942825477","ItemID":400008,"AddUpdTime":1726807032,"OverCnt":"42","ItemInfo":{}},{"UniqueID":"7416579728942825478","ItemID":400002,"AddUpdTime":1726807032,"OverCnt":"27","ItemInfo":{}},{"UniqueID":"7416579728942825479","ItemID":400001,"AddUpdTime":1726807032,"OverCnt":"91","ItemInfo":{}},{"UniqueID":"7416579728942825480","ItemID":400006,"AddUpdTime":1726807032,"OverCnt":"11","ItemInfo":{}},{"UniqueID":"7416579728942825481","ItemID":400007,"AddUpdTime":1726807032,"OverCnt":"21","ItemInfo":{}},{"UniqueID":"7416579728942825482","ItemID":400009,"AddUpdTime":1726807032,"OverCnt":"33","ItemInfo":{}},{"UniqueID":"7416579728942825483","ItemID":400003,"AddUpdTime":1726807032,"OverCnt":"4","ItemInfo":{}},{"UniqueID":"7416579728942825484","ItemID":400005,"AddUpdTime":1726807032,"OverCnt":"7","ItemInfo":{}},{"UniqueID":"7416579728942825485","ItemID":400004,"AddUpdTime":1726807032,"OverCnt":"31","ItemInfo":{}}]},"CoinList":{"CoinCnt":["0","20","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"]},"LoginTime":0,"LoginTimeStr":"1970-01-01 07:30:00","LogoutTime":1726807044,"LogoutTimeStr":"2024-09-20 12:37:24","OnlineTime":1726807044}'
+      ]
+    count => 1
+  }
+}
+filter {
+
+
+
+
+    grok {
+        match => { "message" => "^%{INT:zgame_bizlog_sn}%{GREEDYDATA:message_json}$" }
+      }
+    
+      if ![zgame_bizlog_sn] or ![message_json] {
+        drop { }
+      }
+    
+      json {
+        source => "message_json"
+        target => "zgame"
+      }
+    
+      mutate {
+        remove_field => ["message"]
+      }
+    
+      if [zgame][Head] and [zgame][Head][LogTimeStr] {
+        date {
+          match => ["[zgame][Head][LogTimeStr]", "yyyy-MM-dd HH:mm:ss.SSSSSS"]
+          timezone => "UTC"
+          target => "event_timestamp"
+        }
+      }
+
+
+      
+      # 检查 clone_heroInfoList 数组是否存在且未被任何克隆操作处理
+      if [zgame][HeroInfo][HeroInfoList][0] and "clone_coincnt" not in [tags] and "clone_itemList" not in [tags] {
+          clone {
+              clones => ["clone_heroInfoList"]
+          }
+      }
+  
+      # 检查 clone_coincnt 数组是否存在且未被任何克隆操作处理
+      if [zgame][CoinList][CoinCnt][0] and "clone_heroInfoList" not in [tags] and "clone_itemList" not in [tags] {
+          clone {
+              clones => ["clone_coincnt"]
+          }
+      }
+  
+      # 检查 clone_itemList 数组是否存在且未被任何克隆操作处理
+      if [zgame][ItemInfo][ItemList][0] and "clone_heroInfoList" not in [tags] and "clone_coincnt" not in [tags] {
+          clone {
+              clones => ["clone_itemList"]
+          }
+      }
+  
+  
+      # 处理克隆后的事件，分别拆分并移除其他数组字段
+      if "clone_heroInfoList" in [tags] {
+          split {
+              field => "[zgame][HeroInfo][HeroInfoList]"
+          }
+          mutate {
+              remove_field => ["[zgame][CoinList][CoinCnt]", "[zgame][ItemInfo][ItemList]"]
+          }
+      }
+  
+      if "clone_coincnt" in [tags] {
+          split {
+              field => "[zgame][CoinList][CoinCnt]"
+          }
+          mutate {
+              remove_field => ["[zgame][ItemInfo][ItemList]", "[zgame][HeroInfo][HeroInfoList]"]
+          }
+      }
+  
+      if "clone_itemList" in [tags] {
+          split {
+              field => "[zgame][ItemInfo][ItemList]"
+          }
+          mutate {
+              remove_field => ["[zgame][CoinList][CoinCnt]", "[zgame][HeroInfo][HeroInfoList]"]
+          }
+      }
+  
+      # 如果没有任何克隆操作处理，则丢弃该事件
+      if "clone_heroInfoList" not in [tags] and "clone_coincnt" not in [tags] and "clone_itemList" not in [tags] {
+          drop { }
+      }
+
+
+
+      # 检查 clone_itemList 的嵌套数组  是否存在且未被任何克隆操作处理
+      if [zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][Attr][0] and "clone_itemList" in [tags] and "clone_appendixid" not in [tags]{
+          clone {
+              clones => ["clone_attr"]
+          }
+      }
+
+      
+      if [zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][AppendixID][0] and "clone_itemList" in [tags] and "clone_attr" not in [tags]{
+        clone {
+            clones => ["clone_appendixid"]
+        }
+      }
+
+
+      if "clone_attr" in [tags] {
+        split {
+            field => "[zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][Attr]"
+        }
+        mutate {
+            remove_field => ["[zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][AppendixID]"]
+        }
+      }
+
+
+    if "clone_appendixid" in [tags] {
+      split {
+          field => "[zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][AppendixID]"
+      }
+      mutate {
+          remove_field => ["[zgame][ItemInfo][ItemList][ItemInfo][EquipItemDetail][Attr]"]
+      }
+    }
+
+    if "clone_itemList" in [tags] and "clone_attr" not in [tags] and "clone_appendixid" not in [tags] {
+        drop { }
+    }
+    
+}
+
+
+
+
+
+output {
+  stdout {
+    codec => rubydebug
+  }
+}
