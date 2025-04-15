@@ -5,32 +5,57 @@ setlocal enabledelayedexpansion
 
 
 
-if not "%1"=="-h" goto :start_exec
-echo.
-echo 使用说明 - %2 脚本.
-echo ==============================================================================
-echo.
-echo 基本用法:
-echo   %2                  使用默认用户打开SSH
-echo   %2  xx              指定SSH登录用户为xx
-echo.
-echo VSCode远程打开:
-echo   %2  xx   yy         打开远程主机的yy目录 (指定用户xx)
-echo   %2  yy/             打开远程主机的yy目录 (默认用户)
-echo.
-echo VSCode SFTP同步(需要VSCode中安装SFTP sync @Natizyskunk插件):
-echo   %2  xx   yy   zz    将远程yy/ 同步到本地zz/ (指定用户xx)
-echo   %2  xx/  yy         同上, 用户为默认用户.
-echo.
-echo SCP传输:
-echo   %2  :xx   :yy       将远程xx 复制到远程yy    (默认用户, 使用 scp -3)
-echo   %2  :xx   yy:       将远程xx 复制到本地yy    (默认用户)
-echo   %2  xx:   :yy       将本地xx 复制到远程yy    (默认用户)
-echo   %2  xx:   yy:       将本地xx 复制到本地yy    (默认用户)
-echo   %2  myuser  :xx   yy:    (同理, 只是使用指定远程用户名myuser)
-echo   %2  myuser  xx:   :yy    (同理)
-echo.
-exit /b 0
+if "%1"=="-h" if "%3"=="__local__" (
+    echo 使用说明:
+    echo   %2          在Windows资源管理器中打开指定的本地路径.
+    echo   %2  v       用VSCode打开指定的本地路径.
+    echo.
+    exit /b 0
+)
+
+if "%1"=="-h" if "%3"=="__remote__" (
+    echo.
+    echo 基本用法:
+    echo   %2                  使用默认用户打开SSH
+    echo   %2  xx              指定SSH登录用户为xx
+    echo.
+    echo VSCode远程打开:
+    echo   %2  xx   yy         打开远程主机的yy目录 指定用户xx
+    echo   %2  yy/             打开远程主机的yy目录 默认用户.
+    echo.
+    echo VSCode SFTP同步,需要VSCode中安装SFTP sync @Natizyskunk插件:
+    echo   %2  xx   yy   zz    将远程yy/ 同步到本地zz/ 指定用户xx
+    echo   %2  xx/  yy         同上, 用户为默认用户.
+    echo.
+    echo SCP传输:
+    echo   %2  :xx   :yy       将远程xx 复制到远程yy    默认用户, 使用 scp -3
+    echo   %2  :xx   yy:       将远程xx 复制到本地yy    默认用户.
+    echo   %2  xx:   :yy       将本地xx 复制到远程yy    默认用户.
+    echo   %2  xx:   yy:       将本地xx 复制到本地yy    默认用户.
+    echo   %2  myuser  :xx   yy:    同理, 只是使用指定远程用户名myuser
+    echo   %2  myuser  xx:   :yy    同理.
+    echo.
+    echo 密钥管理:
+    echo   %2  __add.key__                         自动添加你当前指定的"私钥.pub" 到 远程authorized_keys
+    echo   %2  __remove.key__                      自动移除你当前指定的"私钥.pub" 到 远程authorized_keys
+    echo   %2  用户名  __add.key__     [公钥路径]   自动添加公钥 到 远程authorized_keys
+    echo   %2  用户名  __remove.key__  [公钥路径]   自动移除公钥 到 远程authorized_keys
+    echo.
+    echo   详细说明:
+    echo   - 若不指定公钥路径, 脚本会自动使用你指定的私钥"私钥路径.pub"作为默认公钥.
+    echo   - 功能实现:
+    echo     * 添加密钥: 在远程创建~/.ssh/目录[权限700],和authorized_keys文件[权限600]
+    echo                公钥内容会追加到文件末尾, 若已存在则跳过.
+    echo     * 删除密钥: 从远程authorized_keys文件中精确移除指定公钥行.
+    echo.
+    echo   命令示例:
+    echo   %2  __add.key__                          使用默认私钥添加对应公钥到默认用户.
+    echo   %2  admin  __add.key__                   使用默认私钥添加对应公钥到admin用户.
+    echo   %2  admin  __add.key__  D:\my_key.pub    添加指定公钥文件到admin用户.
+    echo   %2  root   __remove.key__                从root用户移除默认私钥对应的公钥.
+    echo.
+    exit /b 0
+)
 :start_exec
 
 
@@ -43,13 +68,13 @@ exit /b 0
 rem -----------------------------------------------------------------------------
 rem 本地快捷操作符.
 rem -----------------------------------------------------------------------------
-if "%1"=="___local___" if not "%2"=="" if "%3"=="" (
+if "%1"=="__local__" if not "%2"=="" if "%3"=="" (
     echo --in if 1--
     start explorer.exe "%2"
     exit /b 0
 )
 
-if "%1"=="___local___" if not "%2"=="" if "%3"=="v" (
+if "%1"=="__local__" if not "%2"=="" if "%3"=="v" (
     echo --in if 2--
     code "%2"
     exit /b 0

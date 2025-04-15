@@ -13,5 +13,5 @@ exit /b 0
 
 
 
-::                                                             ↓修改这里即可
-@echo off  & call  %~dp0..\_lib\remote_kit.cmd  __local__    %userprofile%\.ssh    %1 & exit /b
+::                                                          ↓修改这里即可
+@echo off  & call  %~dp0..\_lib\remote_kit.cmd  __local__    %~dp0             %1 & exit /b

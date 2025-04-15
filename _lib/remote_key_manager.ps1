@@ -165,13 +165,13 @@ if ($useOpenSsh) {
 if ($useOpenSsh) {
     # ========== 使用 ssh/scp 逻辑 ==========
 
-    # 4.1 上传脚本 => scp -i <key> -o StrictHostKeyChecking=accept-new -P <Port> <local> <user@host>:__sub.cmd.sh
+    # 4.1 上传脚本 => scp -i <key> -o StrictHostKeyChecking=accept-new -P <Port> <local> <user@host>:tmp.handy_tools_win_key_manager.sh
     $scpUploadParams = @(
         "-i", $SshKeyPath,
         "-o", "StrictHostKeyChecking=accept-new",
         "-P", $Port,
         $tempScriptPath,
-        "$RemoteUser@${RemoteHost}:__sub.cmd.sh"
+        "$RemoteUser@${RemoteHost}:tmp.handy_tools_win_key_manager.sh"
     )
     Write-Host "[DEBUG] scp command: $scpExe $($scpUploadParams -join ' ')"
     $scpProc = Start-Process -FilePath $scpExe -ArgumentList ($scpUploadParams -join " ") -PassThru -Wait -NoNewWindow
@@ -187,7 +187,7 @@ if ($useOpenSsh) {
         "-o", "StrictHostKeyChecking=accept-new",
         "-p", $Port,
         "$RemoteUser@$RemoteHost",
-        "chmod +x __sub.cmd.sh && bash __sub.cmd.sh $Action && rm -f __sub.cmd.sh"
+        "chmod +x tmp.handy_tools_win_key_manager.sh && bash tmp.handy_tools_win_key_manager.sh $Action && rm -f tmp.handy_tools_win_key_manager.sh"
     )
     Write-Host "[DEBUG] ssh command: $sshExe $($sshExecParams -join ' ')"
     $sshProc = Start-Process -FilePath $sshExe -ArgumentList ($sshExecParams -join " ") -PassThru -Wait -NoNewWindow
@@ -240,13 +240,13 @@ else {
   } while ([string]::IsNullOrWhiteSpace($pwPlain))
   
 
-    # 4.3 上传脚本 => pscp -batch -P <Port> -pw <pwPlain> <local> <user@host>:__sub.cmd.sh
+    # 4.3 上传脚本 => pscp -batch -P <Port> -pw <pwPlain> <local> <user@host>:tmp.handy_tools_win_key_manager.sh
     $pscpUploadParams = @(
         "-batch",
         "-P", $Port,
         "-pw", $pwPlain,
         $tempScriptPath,
-        "$RemoteUser@${RemoteHost}:__sub.cmd.sh"
+        "$RemoteUser@${RemoteHost}:tmp.handy_tools_win_key_manager.sh"
     )
     Write-Host "[DEBUG] pscp: $pscpPath $($pscpUploadParams -join ' ')"
     $pscpProc = Start-Process -FilePath $pscpPath -ArgumentList ($pscpUploadParams -join " ") -PassThru -Wait -NoNewWindow
@@ -264,7 +264,7 @@ else {
         "-P", $Port,
         "-pw", $pwPlain,
         "$RemoteUser@${RemoteHost}",
-        "chmod +x __sub.cmd.sh && bash __sub.cmd.sh $Action && rm -f __sub.cmd.sh"
+        "chmod +x tmp.handy_tools_win_key_manager.sh && bash tmp.handy_tools_win_key_manager.sh $Action && rm -f tmp.handy_tools_win_key_manager.sh"
     )
     Write-Host "[DEBUG] plink: $plinkPath $($plinkExecParams -join ' ')"
     $plinkProc = Start-Process -FilePath $plinkPath -ArgumentList ($plinkExecParams -join " ") -PassThru -Wait -NoNewWindow
