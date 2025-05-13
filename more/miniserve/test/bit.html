@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Generate Taproot Address</title>
+</head>
+<body>
+
+  <!-- 这里放在 body 中也可以, 只要保证在你使用 bitcoinjs-lib 前加载 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bitcoinjs-lib/0.2.0-1/bitcoinjs-min.js"></script>
+
+  <button onclick="generateTaprootAddress()">生成Taproot地址 (Bech32m)</button>
+  <div id="result"></div>
+
+  <script>
+    // 转换公钥
+    function toXOnly(pubkey) {
+      return pubkey.slice(1, 33)
+    }
+
+    function generateTaprootAddress() {
+      // 这里会用到 bitcoin.ECPair.makeRandom()，所以要在这之前引入库
+      const keyPair = bitcoin.ECPair.makeRandom()
+      const xOnlyPubKey = toXOnly(keyPair.publicKey)
+      const { address } = bitcoin.payments.p2tr({
+        internalPubkey: xOnlyPubKey,
+        network: bitcoin.networks.bitcoin
+      })
+
+      document.getElementById("result").innerHTML = `
+        <p>私钥(WIF): <b>${keyPair.toWIF()}</b></p>
+        <p>Taproot地址(Bech32m): <b>${address}</b></p>
+      `
+    }
+  </script>
+
+</body>
+</html>

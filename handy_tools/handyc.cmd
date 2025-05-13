@@ -13,6 +13,6 @@ exit /b 0
 
 
 ::                                                           ↓修改这里即可
-@echo off  & call  %~dp0..\_lib\remote_kit.cmd  __local__    %~dp0             %1 & exit /b
+@echo off  & call  %~dp0..\_lib\remote_kit.cmd  __local__    %~dp0..\handy_tools_custom             %1 & exit /b
 
 

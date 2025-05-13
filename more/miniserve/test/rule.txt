@@ -1,0 +1,15 @@
+[AutoProxy 0.2.9]
+||ipzu.com
+||chatgpt.com
+||claude.ai
+||gemini.google.com
+||ipinfo.io
+||midjourney.com
+
+
+
+
+
+
+!--http://127.0.0.1:8080/rule.txt
+

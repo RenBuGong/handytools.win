@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Big Boss</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+</head>
+<body>
+Global/全球：<br>
+<a href="https://chatgpt.com" 			target="_blank" rel="noopener">ChatGPT.com</a><br>
+<a href="https://x.ai"         			target="_blank" rel="noopener">x.ai</a><br>
+<a href="https://gemini.google.com" 	target="_blank" rel="noopener">Gemini.Google.com</a><br>
+<a href="https://claude.ai"    			target="_blank" rel="noopener">Claude.ai</a><br>
+<a href="https://midjourney.com" 		target="_blank" rel="noopener">MidJourney.com</a><br>
+
+<br>
+China/中国：<br>
+<a href="https://z.ai"                   target="_blank" rel="noopener">z.ai</a><br>
+<a href="https://deepseek.com"           target="_blank" rel="noopener">deepseek.com</a><br>
+<a href="https://tongyi.aliyun.com/"     target="_blank" rel="noopener">Alibaba(阿里)Qwen</a><br>
+<a href="https://jimeng.jianying.com/"   target="_blank" rel="noopener">ByteDance(字节)Jimeng</a><br>
+<a href="https://app.klingai.com/cn/"    target="_blank" rel="noopener">KuaiShou(快手)Kling</a><br>
+
+<br><br>
+ip：<br>
+<pre id="log">loading…</pre>
+
+<script>
+/* ----------- 配置 ----------- */
+const order = ['ipwhois','ipapi','ip.sb','ipify','ipw.cn','ipip.net'];
+const res   = Object.fromEntries(order.map(k=>[k,'等待中…']));
+const draw  = () => {
+  document.getElementById('log').innerHTML =
+    order.map(k => `${k.padEnd(9)}→ ${res[k]}`).join('\n');
+};
+draw();
+
+/* ----------- 带超时 fetch ----------- */
+const tFetch = (u,ms=5000) => new Promise((ok,no)=>{
+  const c = new AbortController(), t = setTimeout(()=>c.abort(),ms);
+  fetch(u,{signal:c.signal}).then(ok).catch(no).finally(()=>clearTimeout(t));
+});
+
+/* ----------- 可直接跨域的接口 ----------- */
+[
+  ['ipwhois','https://ipwho.is/?security=1',
+      d=>`${d.ip} | ${d.country}${d.security?.vpn?' (VPN)':''}`],
+  ['ipapi',  'https://ipapi.co/json/',
+      d=>`${d.ip} | ${d.country_name}`],
+  ['ip.sb',  'https://api.ip.sb/geoip',
+      d=>`${d.ip} | ${d.country} ${d.region||''}`],
+  ['ipify',  'https://api.ipify.org?format=json',
+      d=>d.ip]
+].forEach(([k,u,fmt])=>{
+  tFetch(u).then(r=>r.json()).then(d=>{res[k]=fmt(d);draw();})
+           .catch(()=>{res[k]='获取失败';draw();});
+});
+
+/* ----------- .cn 手动检查链接 ----------- */
+const link = u => `<a href="${u}" target="_blank" rel="noopener">点击查看</a>`;
+res['ipw.cn']   = link('https://test.ipw.cn');     // IPv4/IPv6 优先级
+res['ipip.net'] = link('https://myip.ipip.net');   // 纯文本 IPIP
+draw();   // 一次性刷新含链接的最终结果
+</script>
+</body>
+</html>
