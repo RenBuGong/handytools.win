@@ -173,8 +173,8 @@ rem ----------------------------------------------------------------------------
 rem 如果没有给 arg5~7, 就是最简单的 SSH 登录(用默认用户 + 指定Key)
 if "%arg5%"=="" if "%arg6%"=="" if "%arg7%"=="" (
     echo --in if 7--
-    echo ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no -i %sshKeyPath% %defUser%@%host% -p %port%"
-    ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no -i "%sshKeyPath%" %defUser%@%host% -p %port%
+    echo ssh -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i %sshKeyPath% %defUser%@%host% -p %port%"
+    ssh -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" %defUser%@%host% -p %port%
     exit /b 0
 )
 
@@ -186,7 +186,7 @@ if "%firstChar5%"==":" if "%firstChar6%"==":" if "%arg7%"=="" (
     set "src=%arg5:~1%"
     set "dst=%arg6:~1%"
     echo scp -3: %defUser%@%host%:!src!  to  %defUser%@%host%:!dst!
-    scp -3 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r %defUser%@%host%:"!src!" %defUser%@%host%:"!dst!"
+    scp -3 -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r %defUser%@%host%:"!src!" %defUser%@%host%:"!dst!"
     exit /b 0
 )
 rem 远程to本地 :xx  yy:
@@ -197,8 +197,8 @@ if "%firstChar5%"==":" if "%lastChar6%"==":" if "%arg7%"=="" (
     echo %arg6%
     set "src=%arg5:~1%"
     set "dst=%arg6:~0,-1%"
-    echo scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %defUser%@%host%:!src!  to  !dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r %defUser%@%host%:"!src!" "!dst!"
+    echo scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR  %defUser%@%host%:!src!  to  !dst!
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r %defUser%@%host%:"!src!" "!dst!"
     exit /b 0
 )
 
@@ -208,7 +208,7 @@ if "%lastChar5%"==":" if "%firstChar6%"==":" if "%arg7%"=="" (
     set "src=%arg5:~0,-1%"
     set "dst=%arg6:~1%"
     echo scp: !src!  to  %defUser%@%host%:!dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r "!src!" %defUser%@%host%:"!dst!"
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r "!src!" %defUser%@%host%:"!dst!"
     exit /b 0
 )
 rem 本地to本地 xx:  yy:
@@ -217,7 +217,7 @@ if "%lastChar5%"==":" if "%lastChar6%"==":" if "%arg7%"=="" (
     set "src=%arg5:~0,-1%"
     set "dst=%arg6:~0,-1%"
     echo scp: !src!  to  !dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r "!src!" "!dst!"
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r "!src!" "!dst!"
     exit /b 0
 )
 
@@ -310,11 +310,12 @@ rem %arg5% 为空，以及: /开头结尾的情况都处理完了，剩下即不
 
 
 
+
 rem %6 %7 都为空: 指定用户SSH登录.
 if "%arg6%"=="" if "%arg7%"=="" (
     echo --in if 16--
-    echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i \"%sshKeyPath%\" %arg5%@%host% -p %port%"
-    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" %arg5%@%host% -p %port%
+    echo "ssh -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i \"%sshKeyPath%\" %arg5%@%host% -p %port%"
+    ssh -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" %arg5%@%host% -p %port%
     exit /b 0
 )
 
@@ -325,7 +326,7 @@ if "%firstChar6%"==":" if "%firstChar7%"==":" (
     set "src=%arg6:~1%"
     set "dst=%arg7:~1%"
     echo scp -3: %arg5%@%host%:!src!  to  %arg5%@%host%:!dst!
-    scp -3 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r %arg5%@%host%:"!src!" %arg5%@%host%:"!dst!"
+    scp -3 -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r %arg5%@%host%:"!src!" %arg5%@%host%:"!dst!"
     exit /b 0
 )
 rem 远程to本地 :xx  yy:
@@ -334,7 +335,7 @@ if "%firstChar6%"==":" if "%lastChar7%"==":" (
     set "src=%arg6:~1%"
     set "dst=%arg7:~0,-1%"
     echo scp: %arg5%@%host%:!src!  to  !dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r %arg5%@%host%:"!src!" "!dst!"
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r %arg5%@%host%:"!src!" "!dst!"
     exit /b 0
 )
 rem 本地to远程 xx:  :yy
@@ -343,7 +344,7 @@ if "%lastChar6%"==":" if "%firstChar7%"==":" (
     set "src=%arg6:~0,-1%"
     set "dst=%arg7:~1%"
     echo scp: !src!  to  %arg5%@%host%:!dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r "!src!" %arg5%@%host%:"!dst!"
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r "!src!" %arg5%@%host%:"!dst!"
     exit /b 0
 )
 rem 本地to本地 xx:  yy:
@@ -352,7 +353,7 @@ if "%lastChar6%"==":" if "%lastChar7%"==":" (
     set "src=%arg6:~0,-1%"
     set "dst=%arg7:~0,-1%"
     echo scp: !src!  to  !dst!
-    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%sshKeyPath%" -P %port% -r "!src!" "!dst!"
+    scp -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR -i "%sshKeyPath%" -P %port% -r "!src!" "!dst!"
     exit /b 0
 )
 

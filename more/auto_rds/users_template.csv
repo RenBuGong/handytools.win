@@ -1,0 +1,4 @@
+SamAccountName,Password,FirstName,LastName,Description,OUPath
+jdoe,"P@ssw0rdChangeMe!",John,Doe,"Sales Department",""
+asmith,"P@ssw0rdChangeMe!",Alice,Smith,"Marketing Department",""
+bwayne,"P@ssw0rdChangeMe!",Bruce,Wayne,"R&D Department","OU=R&D,DC=example,DC=com" 

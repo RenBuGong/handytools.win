@@ -3,3 +3,5 @@ handy_tools_custom/*
 !handy_tools_custom/_example_remote.cmd
 path_backup.log
 handy_tools/pathhere.backup.log
+.env.*
+*.pfx
